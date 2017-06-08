@@ -122,10 +122,3 @@ package object npy {
     }
   }
 }
-
-object Main {
-  def main(args: Array[String]): Unit = {
-    val x: NPYVector[Long] = NPYVector.valueOf("/home/priimak/projects/scala/scala-data/timestamp.npy")
-    println(x(1))
-  }
-}
