@@ -2,6 +2,7 @@ package net.priimak.scala.data
 
 import java.io._
 import java.nio._
+import java.nio.channels._
 import java.nio.file._
 
 /**
@@ -24,19 +25,19 @@ package object dcd {
    * @param rawFrames raw data containing frames
    */
   case class DCD(
-        byteOrder:    ByteOrder,
-        scale:        Scale,
-        frames:        Int, // number of sets of coordinates
-        t0:           Int, // starting timestamp
-        stepsInFrame: Int, // the number of timesteps between dcd saves
-        freeAtoms:    Int, // number of free atoms
-        fixedAtoms:   Int, // number of fixed atoms
-        dt:           Float,
-        title:        String,
-        natoms:       Int,
-        freeIdx:      Array[Int],
-        rawFrames:    ByteBuffer,
-        frameBytes:   Int,
+        byteOrder:      ByteOrder,
+        scale:          Scale,
+        frames:         Int, // number of sets of coordinates
+        t0:             Int, // starting timestamp
+        stepsInFrame:   Int, // the number of timesteps between dcd saves
+        freeAtoms:      Int, // number of free atoms
+        fixedAtoms:     Int, // number of fixed atoms
+        dt:             Float,
+        title:          String,
+        natoms:         Int,
+        freeIdx:        Array[Int],
+        rawFrames:      ByteBuffer,
+        frameBytes:     Int,
         framesStartPos: Int
       ) {
     // size of block in bytes that contains x, y or z coordinates within one frame
@@ -72,11 +73,6 @@ package object dcd {
   }
 
   /**
-   * Coordinates in the 3d space
-   */
-  final case class Coord(x: Float, y: Float, z: Float)
-
-  /**
    * Scale of dcd file. Either Scale32 (contains floats for coordinates) or Scale64 (contains doubles for coordinates).
    */
   sealed abstract class Scale
@@ -88,14 +84,31 @@ package object dcd {
     private val cord = "CORD".toCharArray.map(_.toByte)
 
     /**
+     * Operate on memory mapped dcd file.
+     *
+     * @param file name of dcd file
+     * @param f function to operate on DCD
+     */
+    def withFile(file: String)(f: DCD => Unit): Unit = {
+      val fc = new RandomAccessFile(file, "r").getChannel
+      try {
+        f(fromByteBuffer(fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size())))
+      } finally {
+        fc.close()
+      }
+    }
+
+    /**
      * Read DCD object from .dcd file.
      *
      * @param file file name of the .dcd file
      * @return instance of DCD
      */
-    def valueOf(file: String): DCD = {
-      val rawData = ByteBuffer.wrap(Files.readAllBytes(Paths.get(file)))
+    def fromFile(file: String): DCD = {
+      fromByteBuffer(ByteBuffer.wrap(Files.readAllBytes(Paths.get(file))))
+    }
 
+    def fromByteBuffer(rawData: ByteBuffer): DCD = {
       // first 8 bytes contains magic header that can also be used to detect endianes
       def readMagic(byteOrder: ByteOrder = ByteOrder.BIG_ENDIAN): (ByteOrder, Scale) = {
         rawData.rewind()
