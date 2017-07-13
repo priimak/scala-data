@@ -1,8 +1,11 @@
 package net.priimak.scala.data
 
+import java.io.{File, PrintWriter}
+
 import net.priimak.scala.data.dcd._
 
 import scala.io._
+import math.sqrt
 
 /**
  * Classes and methods that deal with molecular structures.
@@ -32,10 +35,9 @@ package object ms {
       tempf: Float,
       sym: String,
       rt: IndexedSeq[Coord]) {
-    def x: Float = coordinates.x
-    def y: Float = coordinates.y
-    def z: Float = coordinates.z
-
+    def x: Double = coordinates.x
+    def y: Double = coordinates.y
+    def z: Double = coordinates.z
   }
 
   /**
