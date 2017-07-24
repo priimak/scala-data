@@ -110,7 +110,7 @@ package object ms {
               Coord(x.trim.toFloat, y.trim.toFloat, z.trim.toFloat),
               occupancy.trim.toFloat,
               tempf.trim.toFloat,
-              eSym.trim,
+              atomSymbol(atomName),
               IndexedSeq.empty
             ))
           case ATOMHR(serial, atomName, resName, chainId, resSeqNum, x, y, z, occupancy, tempf, segmentId, eSym) =>
@@ -123,7 +123,7 @@ package object ms {
               Coord(x.trim.toFloat, y.trim.toFloat, z.trim.toFloat),
               occupancy.trim.toFloat,
               tempf.trim.toFloat,
-              eSym.trim,
+              atomSymbol(atomName),
               IndexedSeq.empty
             ))
           case ATOMCR(atomName, resName, chainId, resSeqNum, x, y, z, occupancy, tempf, segmentId, eSym) =>
@@ -136,7 +136,7 @@ package object ms {
               Coord(x.trim.toFloat, y.trim.toFloat, z.trim.toFloat),
               occupancy.trim.toFloat,
               tempf.trim.toFloat,
-              eSym.trim,
+              atomSymbol(atomName),
               IndexedSeq.empty
             ))
           case _ => None
@@ -147,6 +147,21 @@ package object ms {
         override def length: Int = atoms.length
         override def apply(idx: Int): XAtom = atoms(idx)
       }
+    }
+
+    private val remotenesSymbols = Set('A', 'B', 'G', 'D', 'E', 'Z', 'H')
+
+    /**
+     * Extract atom symbol from the atom name
+     */
+    private def atomSymbol(atomName: String): String = {
+      val sym = s"%s%s".format(atomName(0), atomName(1)).trim()
+      if (sym.length == 1)
+        sym
+      else if (atomName(1).isDigit || remotenesSymbols.contains(atomName(1)))
+        atomName(0).toString
+      else
+        sym
     }
   }
 }
